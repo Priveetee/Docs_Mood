@@ -44,8 +44,8 @@ Le `Vote` est l'unité de donnée atomique, représentant le feedback soumis par
 - **Champs clés** :
   - `mood` : La valeur du sentiment (ex: "happy", "neutral", "sad").
   - `comment` : Un champ texte optionnel pour un feedback qualitatif.
-  - `pollLinkId` : L'identifiant du lien via lequel le vote a été soumis.
-  - `campaignId` : L'identifiant de la campagne parente. Cette relation est dénormalisée pour optimiser les performances des requêtes d'agrégation.
+  - `pollLinkId` : L'identifiant du lien via lequel le vote a été soumis. C'est crucial pour **suivre les résultats par manager ou par équipe**.
+  - `campaignId` : L'identifiant de la campagne parente. Cette relation est intentionnellement incluse (dénormalisée) pour **optimiser les performances des requêtes d'agrégation globales** sur une campagne.
 
 ## Schéma Logique des Relations
 

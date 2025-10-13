@@ -44,8 +44,8 @@ A `Vote` is the atomic unit of data, representing the feedback submitted by an e
 - **Key Fields**:
   - `mood`: The sentiment value (e.g., "happy", "neutral", "sad").
   - `comment`: An optional text field for qualitative feedback.
-  - `pollLinkId`: The ID of the link through which the vote was submitted.
-  - `campaignId`: The ID of the parent campaign. This relationship is denormalized to optimize the performance of aggregation queries.
+  - `pollLinkId`: The ID of the link through which the vote was submitted. This is crucial for **tracking results per manager or team**.
+  - `campaignId`: The ID of the parent campaign. This relationship is intentionally included (denormalized) to **optimize the performance of global aggregation queries** on a campaign.
 
 ## Logical Relationship Schema
 
