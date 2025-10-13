@@ -8,6 +8,8 @@ export default defineConfig({
 
   head: [["link", { rel: "icon", href: "/Docs_Mood/mood-logo.svg" }]],
 
+  ignoreDeadLinks: [/^https?:\/\/localhost/],
+
   themeConfig: {
     logo: "/mood-logo.svg",
     search: {
