@@ -1,0 +1,1 @@
+import{_ as e,c as t,o as r}from"./chunks/framework.CsKOyHKY.js";const l=JSON.parse('{"title":"","description":"","frontmatter":{},"headers":[],"relativePath":"developer-guide/api-trpc.md","filePath":"developer-guide/api-trpc.md"}'),a={name:"developer-guide/api-trpc.md"};function p(o,c,i,d,s,n){return r(),t("div")}const m=e(a,[["render",p]]);export{l as __pageData,m as default};

@@ -1,0 +1,1 @@
+import{_ as e,c as a,o as t}from"./chunks/framework.CsKOyHKY.js";const l=JSON.parse('{"title":"","description":"","frontmatter":{},"headers":[],"relativePath":"developer-guide/database.md","filePath":"developer-guide/database.md"}'),r={name:"developer-guide/database.md"};function d(o,s,c,n,p,i){return t(),a("div")}const m=e(r,[["render",d]]);export{l as __pageData,m as default};

@@ -1,0 +1,1 @@
+import{_ as e,c as t,o as r}from"./chunks/framework.CsKOyHKY.js";const u=JSON.parse('{"title":"","description":"","frontmatter":{},"headers":[],"relativePath":"fr/developer-guide/setup.md","filePath":"fr/developer-guide/setup.md"}'),a={name:"fr/developer-guide/setup.md"};function o(s,p,d,c,n,i){return r(),t("div")}const _=e(a,[["render",o]]);export{u as __pageData,_ as default};
