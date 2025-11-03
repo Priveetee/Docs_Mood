@@ -1,49 +1,37 @@
 # Authentification
 
-L'authentification dans le projet Mood est gérée par la librairie `better-auth`, une solution d'authentification moderne pour Next.js. Elle prend en charge les sessions utilisateur, les identifiants et fournit la base pour sécuriser les points d'accès de l'API.
+L'authentification dans le projet Mood est une pièce maîtresse de son modèle de sécurité, construite autour d'un **design à administrateur unique**. Elle est gérée par la librairie `better-auth`, configurée avec une logique personnalisée pour appliquer cette exigence spécifique.
 
-## Fichiers de Configuration Clés
+## Logique d'Administrateur Unique (`src/auth.ts`)
 
-La logique d'authentification est principalement configurée dans deux fichiers essentiels :
+Le cœur du système d'authentification se trouve dans `src/auth.ts`. Un `databaseHooks` est utilisé pour intercepter le processus de création d'utilisateur :
 
-1.  **`src/auth.ts`** : C'est le fichier de configuration principal pour `better-auth`. Il définit les stratégies d'authentification (par exemple, le `credentials provider` pour la connexion par email/mot de passe), les paramètres de gestion de session (stratégie JWT, etc.) et les callbacks.
+- **`user.create.before`** : Avant qu'un nouvel utilisateur ne soit créé, ce hook exécute une requête pour vérifier le nombre total d'utilisateurs dans la base de données.
+- **Si `userCount` est supérieur à 0**, la création est rejetée avec une erreur.
+- Cela garantit qu'une fois que le premier compte administrateur est créé, **aucun autre compte ne pourra jamais être enregistré**.
 
-2.  **`src/app/api/auth/[...all]/route.ts`** : Ce fichier crée les points d'API requis par `better-auth` (ex: `/api/auth/signin`, `/api/auth/signout`, `/api/auth/session`). Il se contente d'exporter les gestionnaires depuis la configuration principale dans `src/auth.ts`.
+## Le Flux d'Inscription
 
-## Intégration avec tRPC
+Le frontend s'adapte intelligemment à cette règle d'administrateur unique.
+
+1.  **Le Layout `(auth)`** : La page `/login` est enveloppée par `src/app/(auth)/layout.tsx`. Cette mise en page fournit un `PublicTRPCProvider`, qui est essentiel pour que le formulaire de connexion puisse effectuer des appels d'API publics.
+
+2.  **Endpoint `auth.canRegister`** : L'`authRouter` expose une requête publique `canRegister`. Cet endpoint retourne simplement `true` si le nombre d'utilisateurs est de 0, et `false` sinon.
+
+3.  **UI Conditionnelle dans `LoginForm.tsx`** : Le formulaire de connexion appelle `publicTrpc.auth.canRegister.useQuery()`. Le résultat de ce hook est utilisé pour afficher conditionnellement l'onglet "Sign Up". Si `canRegister` est `false`, l'onglet est masqué et seul le formulaire de connexion est disponible.
+
+## Gestion de Session & Intégration tRPC
 
 La session de l'utilisateur est rendue disponible aux procédures tRPC via le **contexte** tRPC.
 
-Le contexte est un objet spécial auquel chaque procédure tRPC a accès. Il est créé pour chaque requête entrante dans le fichier `src/server/context.ts`. Dans ce fichier, nous utilisons la fonction `auth()` de `better-auth` pour récupérer la session actuelle à partir des en-têtes de la requête.
+Le contexte est créé pour chaque requête dans `src/server/context.ts`. Il utilise `auth.api.getSession()` de `better-auth` pour récupérer la session actuelle. Si une session valide existe, elle est attachée au contexte.
 
-Si une session valide existe, l'objet `session` est attaché au contexte. Sinon, `session` est `null`.
+## Protéger les Procédures de l'API (`protectedProcedure`)
 
-## Protéger les Procédures de l'API
+Pour restreindre l'accès, nous utilisons une `protectedProcedure` définie dans `src/server/trpc.ts`. Ce middleware personnalisé effectue les actions suivantes :
 
-Pour restreindre l'accès à certains points d'accès de l'API, nous utilisons une `protectedProcedure`. C'est un middleware tRPC personnalisé défini dans `src/server/trpc.ts`.
+1.  Il vérifie si `ctx.session` et `ctx.session.user` existent.
+2.  Si la session est manquante, il lève une erreur `UNAUTHORIZED`, empêchant la procédure de s'exécuter.
+3.  Si la session est présente, il rend les détails de l'utilisateur (comme `ctx.session.user.id`) disponibles à la logique de la procédure.
 
-La `protectedProcedure` effectue les actions suivantes :
-
-1.  Elle vérifie si `ctx.session` et `ctx.session.user` existent dans le contexte.
-2.  Si la session est manquante, elle lève automatiquement une `TRPCError` avec le code `UNAUTHORIZED`, empêchant la logique de la procédure de s'exécuter.
-3.  Si la session est présente, elle continue et rend l'objet `session` disponible à la procédure, y compris l'ID de l'utilisateur (`ctx.session.user.id`).
-
-### Exemple d'Utilisation
-
-Voici comment une procédure protégée est définie dans un routeur tRPC :
-
-```ts
-import { protectedProcedure, router } from "../trpc";
-
-export const campaignRouter = router({
-  list: protectedProcedure.query(async ({ ctx }) => {
-    // Nous pouvons accéder à ctx.session.user en toute sécurité ici
-    const campaigns = await ctx.prisma.campaign.findMany({
-      where: { createdBy: ctx.session.user.id },
-    });
-    return campaigns;
-  }),
-});
-```
-
-Toute procédure construite avec `protectedProcedure` au lieu de `procedure` nécessitera une session utilisateur valide pour être accessible.
+Cette approche à plusieurs niveaux — combinant une règle de base de données, une interface utilisateur conditionnelle et une protection de l'API côté serveur — crée un système d'administrateur unique robuste et sécurisé.

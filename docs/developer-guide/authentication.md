@@ -1,49 +1,37 @@
 # Authentication
 
-Authentication in the Mood project is handled by the `better-auth` library, a modern authentication solution for Next.js. It manages user sessions, credentials, and provides the foundation for securing API endpoints.
+Authentication in the Mood project is a critical piece of its security model, built around a **single-administrator design**. It's handled by the `better-auth` library, configured with custom logic to enforce this specific requirement.
 
-## Core Configuration Files
+## Single-Administrator Logic (`src/auth.ts`)
 
-The authentication logic is primarily configured in two key files:
+The core of the authentication system lies in `src/auth.ts`. A `databaseHooks` function is used to intercept the user creation process:
 
-1.  **`src/auth.ts`**: This is the main configuration file for `better-auth`. It defines the authentication strategies (e.g., credentials provider for email/password login), session management settings (e.g., JWT strategy), and callbacks.
+- **`user.create.before`**: Before a new user is created, this hook runs a query to check the total number of users in the database.
+- **If `userCount` is greater than 0**, the creation is rejected with an error.
+- This ensures that once the first administrator account is created, **no other accounts can ever be registered**.
 
-2.  **`src/app/api/auth/[...all]/route.ts`**: This file creates the API endpoints required by `better-auth` (e.g., `/api/auth/signin`, `/api/auth/signout`, `/api/auth/session`). It simply exports the handlers from the main `src/auth.ts` configuration.
+## The Registration Flow
 
-## Integration with tRPC
+The frontend intelligently adapts to this single-admin rule.
+
+1.  **The `(auth)` Layout**: The `/login` page is wrapped by `src/app/(auth)/layout.tsx`. This layout provides a `PublicTRPCProvider`, which is essential for the login form to make public API calls.
+
+2.  **`auth.canRegister` Endpoint**: The `authRouter` exposes a public `canRegister` query. This endpoint simply returns `true` if the user count is 0, and `false` otherwise.
+
+3.  **Conditional UI in `LoginForm.tsx`**: The login form calls `publicTrpc.auth.canRegister.useQuery()`. The result of this hook is used to conditionally render the "Sign Up" tab. If `canRegister` is `false`, the tab is hidden, and only the login form is available.
+
+## Session Management & tRPC Integration
 
 The user's session is made available to tRPC procedures through the tRPC **context**.
 
-The context is a special object that every tRPC procedure has access to. It's created for each incoming request in the `src/server/context.ts` file. In this file, we use the `auth()` function from `better-auth` to retrieve the current session from the request's headers.
+The context is created for each request in `src/server/context.ts`. It uses `auth.api.getSession()` from `better-auth` to retrieve the current session. If a valid session exists, it's attached to the context.
 
-If a valid session exists, the `session` object is attached to the context. If not, `session` is `null`.
+## Protecting API Procedures (`protectedProcedure`)
 
-## Protecting API Procedures
+To restrict access, we use a `protectedProcedure` defined in `src/server/trpc.ts`. This custom middleware does the following:
 
-To restrict access to certain API endpoints, we use a `protectedProcedure`. This is a custom tRPC middleware defined in `src/server/trpc.ts`.
+1.  It checks if `ctx.session` and `ctx.session.user` exist.
+2.  If the session is missing, it throws an `UNAUTHORIZED` error, preventing the procedure from running.
+3.  If the session is present, it makes the user's details (like `ctx.session.user.id`) available to the procedure's logic.
 
-The `protectedProcedure` does the following:
-
-1.  It checks if `ctx.session` and `ctx.session.user` exist in the context.
-2.  If the session is missing, it automatically throws a `TRPCError` with the code `UNAUTHORIZED`, preventing the procedure's logic from running.
-3.  If the session is present, it proceeds and makes the `session` object available to the procedure, including the user's ID (`ctx.session.user.id`).
-
-### Usage Example
-
-Here is how a protected procedure is defined in a tRPC router:
-
-```ts
-import { protectedProcedure, router } from "../trpc";
-
-export const campaignRouter = router({
-  list: protectedProcedure.query(async ({ ctx }) => {
-    // We can safely access ctx.session.user here
-    const campaigns = await ctx.prisma.campaign.findMany({
-      where: { createdBy: ctx.session.user.id },
-    });
-    return campaigns;
-  }),
-});
-```
-
-Any procedure built with `protectedProcedure` instead of `procedure` will require a valid user session to be accessed.
+This multi-layered approach—combining a database rule, a conditional UI, and server-side API protection—creates a robust and secure single-administrator system.
