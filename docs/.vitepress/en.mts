@@ -40,6 +40,19 @@ export const en = defineConfig({
             { text: "Shared Logic", link: "/developer-guide/shared-logic" },
           ],
         },
+        {
+          text: "Frontend",
+          items: [
+            {
+              text: "Architecture",
+              link: "/developer-guide/frontend-architecture",
+            },
+            {
+              text: "Core Patterns",
+              link: "/developer-guide/frontend-patterns",
+            },
+          ],
+        },
       ],
     },
 

@@ -63,6 +63,19 @@ export const fr = defineConfig({
             },
           ],
         },
+        {
+          text: "Frontend",
+          items: [
+            {
+              text: "Architecture",
+              link: "/fr/developer-guide/frontend-architecture",
+            },
+            {
+              text: "Patterns Essentiels",
+              link: "/fr/developer-guide/frontend-patterns",
+            },
+          ],
+        },
       ],
     },
 
