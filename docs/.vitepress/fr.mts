@@ -56,6 +56,11 @@ export const fr = defineConfig({
               link: "/fr/developer-guide/authentication",
             },
             { text: "Déploiement", link: "/fr/developer-guide/deployment" },
+            { text: "Middleware", link: "/fr/developer-guide/middleware" },
+            {
+              text: "Logique Partagée",
+              link: "/fr/developer-guide/shared-logic",
+            },
           ],
         },
       ],
