@@ -1,35 +1,47 @@
 # Introduction
 
-Welcome to the developer documentation for the **Mood** project. This guide provides a deep dive into the architecture, tools, and conventions used in this application.
+Welcome to the developer documentation for the **Mood** project. This guide provides a deep dive into the architecture, technical choices, and core principles that define this application.
 
 ## Project Goal
 
-Mood is a self-hostable polling platform designed for teams to gather feedback anonymously. It allows a single administrator to create campaigns and distribute unique polling links to managers or teams, ensuring that all responses remain untraceable to the individual.
+Mood is a self-hostable polling platform designed for teams to gather feedback with a core focus on **100% anonymity and a single-administrator security model**. It allows one admin to create campaigns and distribute unique polling links to managers, ensuring that all responses remain untraceable to the individual.
+
+## Core Architectural Principles
+
+The application is built on several key principles that guide its structure and development:
+
+1.  **End-to-End Type Safety**: By combining Next.js, tRPC, Zod, and Prisma, the entire data flow is strongly typed. This eliminates a massive class of potential bugs between the frontend and backend and provides an exceptional developer experience with autocompletion.
+
+2.  **Defense in Depth Security**: The application employs a multi-layered security model:
+    - **Edge Protection**: A `middleware.ts` file protects the entire `/admin` route group at the network edge, redirecting unauthenticated users before any application code is rendered.
+    - **API Protection**: Every sensitive API endpoint is a `protectedProcedure`, verifying the user's session on the server for every single request.
+    - **Single-Admin Model**: The authentication logic (`src/auth.ts`) is hard-coded to allow registration only for the very first user, secured by a mandatory `INVITATION_KEY`.
+
+3.  **Optimized User Experience**: The architecture is designed to be fast and responsive.
+    - **"Server Component Shell" Pattern**: Complex pages use a Server Component shell to enable instant loading and UI streaming via React Suspense, while a core Client Component handles all interactivity.
+    - **Consistent Feedback**: Every user action (especially mutations) provides immediate visual feedback through toasts and loading states, ensuring the user is never left guessing.
 
 ## Technical Stack
 
-The project is built on a modern, fully typesafe stack from the database to the frontend:
+- **Framework**: Next.js 15 (App Router) with Turbopack
+- **API**: tRPC (for end-to-end typesafe APIs)
+- **Database**: PostgreSQL with Prisma ORM
+- **Authentication**: Better Auth (configured for a single-admin system)
+- **UI**: Tailwind CSS with shadcn/ui components
+- **Visuals**: Custom WebGL shaders via `react-three-fiber` & `ogl`
+- **Validation**: Zod (for API input validation)
 
-- **Framework**: [Next.js](https://nextjs.org/) 15 (App Router) with Turbopack
-- **API**: [tRPC](https://trpc.io/) for end-to-end typesafe APIs
-- **Database**: [PostgreSQL](https://www.postgresql.org/)
-- **ORM**: [Prisma](https://www.prisma.io/) for database access and migrations
-- **Authentication**: [Better Auth](https://github.com/Thorn-Services/better-auth) for session management, configured for a single-admin system
-- **UI**: [Tailwind CSS](https://tailwindcss.com/) with [shadcn/ui](https://ui.shadcn.com/) components
-- **Validation**: [Zod](https://zod.dev/) for schema validation on API inputs
+## Application Data Flow
 
-## Architecture Overview
+A typical request to a protected page follows this comprehensive path:
 
-The application follows a monolithic, full-stack structure within the Next.js framework. The communication between the client and server is primarily handled by tRPC.
-
-### Request Flow
-
-A typical data request follows this path:
-
-1.  A Client Component (e.g., in `src/app/admin/`) uses a tRPC hook from `@/lib/trpc/client` to call an API procedure (e.g., `trpc.campaign.list.useQuery()`).
-2.  The `TRPCProvider` (in `src/lib/trpc/provider.tsx`) sends a batched HTTP request to the `/api/trpc` endpoint. Data is serialized with `superjson`.
-3.  The Next.js API route (`src/app/api/trpc/[trpc]/route.ts`) forwards the request to the main tRPC router.
-4.  The tRPC context (`src/server/context.ts`) is created for the request, injecting the `prisma` client and the user `session` (retrieved via `better-auth`).
-5.  If the procedure is a `protectedProcedure` (`src/server/trpc.ts`), it verifies the user's session. If invalid, it throws an `UNAUTHORIZED` error.
-6.  The corresponding router procedure (e.g., in `src/server/routers/campaign.ts`) executes its logic, using the Prisma client to interact with the database.
-7.  The response is returned to the client, fully typed and ready to be used.
+1.  A user attempts to access an admin URL (e.g., `/admin/campaigns/active`).
+2.  The **Next.js Middleware** (`src/middleware.ts`) intercepts the request at the edge and verifies the session cookie. If invalid, it redirects to `/login`.
+3.  The request proceeds. React renders the page, starting with the **Root Layout** and the **Admin Layout**.
+4.  The `AdminLayout` wraps the page in a `TRPCProvider`, making the authenticated tRPC client available.
+5.  The page's Client Component (e.g., `ActiveCampaignsPage.tsx`) mounts and calls a tRPC hook, like `trpc.campaign.list.useQuery()`.
+6.  The tRPC client sends an HTTP request to the API route at `/api/trpc`. Data is serialized using `superjson`.
+7.  The **tRPC Context** (`src/server/context.ts`) is created on the server, attaching the `prisma` client and the user `session` to the request.
+8.  The `protectedProcedure` in `src/server/trpc.ts` runs its middleware, validating that `ctx.session.user` exists.
+9.  The router logic in `src/server/routers/campaign.ts` finally executes, using Prisma to query the database.
+10. The fully typed response is returned to the client, where React Query manages caching and renders the data.
