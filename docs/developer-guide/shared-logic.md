@@ -21,7 +21,7 @@ Used for the initial administrator registration form.
 - **name**: Must be at least 3 characters long.
 - **password**: Must be at least 8 characters long.
 - **confirmPassword**: Must exactly match the `password` field.
-- **invitationKey**: An optional secret key, potentially used for future multi-admin setups (currently unused as registration is locked after the first user).
+- **invitationKey**: A mandatory secret key, defined in the `.env` file (`INVITATION_KEY`). This key must be provided during the registration of the first and only administrator account to secure the initial setup.
 
 ## CSV Export (`export-csv.ts`)
 

@@ -21,7 +21,7 @@ Utilisé pour le formulaire d'inscription initial de l'administrateur.
 - **name** : Doit contenir au moins 3 caractères.
 - **password** : Doit contenir au moins 8 caractères.
 - **confirmPassword** : Doit correspondre exactement au champ `password`.
-- **invitationKey** : Une clé secrète optionnelle, potentiellement utilisée pour de futures configurations multi-administrateurs (actuellement inutilisée car l'inscription est bloquée après le premier utilisateur).
+- **invitationKey** : Une clé secrète obligatoire, définie dans le fichier `.env` (`INVITATION_KEY`). Cette clé doit être fournie lors de l'inscription du premier et unique compte administrateur pour sécuriser la configuration initiale.
 
 ## Export CSV (`export-csv.ts`)
 
