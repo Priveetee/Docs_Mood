@@ -7,10 +7,17 @@ export const en = defineConfig({
   themeConfig: {
     nav: [
       { text: "Home", link: "/" },
+      { text: "User Guide", link: "/user-guide/introduction" },
       { text: "Developer Guide", link: "/developer-guide/introduction" },
     ],
 
     sidebar: {
+      "/user-guide/": [
+        {
+          text: "User Guide",
+          items: [{ text: "Introduction", link: "/user-guide/introduction" }],
+        },
+      ],
       "/developer-guide/": [
         {
           text: "Getting Started",

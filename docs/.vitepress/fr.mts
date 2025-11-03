@@ -7,6 +7,7 @@ export const fr = defineConfig({
   themeConfig: {
     nav: [
       { text: "Accueil", link: "/fr/" },
+      { text: "Guide Utilisateur", link: "/fr/user-guide/introduction" },
       {
         text: "Guide Développeur",
         link: "/fr/developer-guide/introduction",
@@ -14,6 +15,17 @@ export const fr = defineConfig({
     ],
 
     sidebar: {
+      "/fr/user-guide/": [
+        {
+          text: "Guide Utilisateur",
+          items: [
+            {
+              text: "Introduction",
+              link: "/fr/user-guide/introduction",
+            },
+          ],
+        },
+      ],
       "/fr/developer-guide/": [
         {
           text: "Pour Commencer",
