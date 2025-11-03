@@ -51,6 +51,10 @@ export const en = defineConfig({
               text: "Core Patterns",
               link: "/developer-guide/frontend-patterns",
             },
+            {
+              text: "Advanced Visuals",
+              link: "/developer-guide/advanced-visuals",
+            },
           ],
         },
       ],
