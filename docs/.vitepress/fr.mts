@@ -23,6 +23,22 @@ export const fr = defineConfig({
               text: "Introduction",
               link: "/fr/user-guide/introduction",
             },
+            {
+              text: "Pour Commencer",
+              link: "/fr/user-guide/getting-started",
+            },
+            {
+              text: "Créer une Campagne",
+              link: "/fr/user-guide/creating-campaigns",
+            },
+            {
+              text: "Gérer les Campagnes",
+              link: "/fr/user-guide/managing-campaigns",
+            },
+            {
+              text: "Analyser les Résultats",
+              link: "/fr/user-guide/analyzing-results",
+            },
           ],
         },
       ],

@@ -15,7 +15,22 @@ export const en = defineConfig({
       "/user-guide/": [
         {
           text: "User Guide",
-          items: [{ text: "Introduction", link: "/user-guide/introduction" }],
+          items: [
+            { text: "Introduction", link: "/user-guide/introduction" },
+            { text: "Getting Started", link: "/user-guide/getting-started" },
+            {
+              text: "Creating Campaigns",
+              link: "/user-guide/creating-campaigns",
+            },
+            {
+              text: "Managing Campaigns",
+              link: "/user-guide/managing-campaigns",
+            },
+            {
+              text: "Analyzing Results",
+              link: "/user-guide/analyzing-results",
+            },
+          ],
         },
       ],
       "/developer-guide/": [
