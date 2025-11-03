@@ -1,11 +1,11 @@
 :root {
-    --vp-c-brand-1: #c83270;
-    --vp-c-brand-2: #de4587;
-    --vp-c-brand-3: #b12960;
+    --vp-c-brand-1: #4f46e5;
+    --vp-c-brand-2: #6366f1;
+    --vp-c-brand-3: #4338ca;
     --vp-home-hero-name-color: transparent;
     --vp-home-hero-name-background: -webkit-linear-gradient(
         120deg,
-        #de4587 30%,
-        #c83270
+        #6366f1 30%,
+        #4f46e5
     );
 }

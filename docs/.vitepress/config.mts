@@ -3,33 +3,33 @@ import { en } from "./en.mts";
 import { fr } from "./fr.mts";
 
 export default defineConfig({
-    title: "PipePipe Wiki",
-    base: "/Docs-PipePipe/",
+  title: "Mood Docs",
+  base: "/Docs_Mood/",
 
-    head: [["link", { rel: "icon", href: "/Docs-PipePipe/pipepipe.png" }]],
+  head: [["link", { rel: "icon", href: "/Docs_Mood/mood-logo.svg" }]],
 
-    themeConfig: {
-        logo: "/pipepipe.png",
-        search: {
-            provider: "local",
-        },
-        socialLinks: [
-            {
-                icon: "github",
-                link: "https://github.com/InfinityLoop1308/PipePipe",
-            },
-        ],
+  themeConfig: {
+    logo: "/mood-logo.svg",
+    search: {
+      provider: "local",
     },
+    socialLinks: [
+      {
+        icon: "github",
+        link: "https://github.com/Priveetee/Docs_Mood",
+      },
+    ],
+  },
 
-    locales: {
-        root: {
-            label: "English",
-            ...en,
-        },
-        fr: {
-            label: "Français",
-            link: "/fr/",
-            ...fr,
-        },
+  locales: {
+    root: {
+      label: "English",
+      ...en,
     },
+    fr: {
+      label: "Français",
+      link: "/fr/",
+      ...fr,
+    },
+  },
 });
