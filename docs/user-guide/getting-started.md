@@ -6,8 +6,8 @@ This guide will walk you through setting up your administrator account for the f
 
 The Mood application is designed to be managed by a single administrator. Therefore, registration is only open until the first account is created.
 
-1.  **Navigate to the Application**: Open the URL where your Mood application is hosted (e.g., `http://localhost:3000`).
-2.  **Access the Registration Form**: If no administrator account exists, you will see a "Sign Up" tab on the login form. Click on it.
+1.  **Access the Login Page**: Open your browser and navigate directly to the login page. If you are running the application locally, this will be `http://localhost:3000/login`.
+2.  **Access the Registration Form**: If no administrator account exists, you will see a "Sign Up" tab on the form. Click on it.
 3.  **Fill in the Details**:
     - **Email**: Your email address, which will be used to log in.
     - **Username**: Your display name.
@@ -15,4 +15,4 @@ The Mood application is designed to be managed by a single administrator. Theref
     - **Invitation Key**: Enter the secret `INVITATION_KEY` that was configured in your server's `.env` file. This is a security measure to ensure only an authorized person can create the first account.
 4.  **Create Account**: Click the "Create Account" button.
 
-Once your account is created, the registration form will be permanently disabled. All future visits will only show the "Sign In" form. You can now log in to access the administrator dashboard.
+Once your account is created, the application will log you in and redirect you to the admin dashboard. The registration form will be permanently disabled for all future visitors.
