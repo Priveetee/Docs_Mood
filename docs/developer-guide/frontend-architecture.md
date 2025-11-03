@@ -15,10 +15,14 @@ The `src/app` directory follows the App Router conventions, where folders define
 Layouts are used to create a consistent UI shell across multiple pages.
 
 - **`src/app/layout.tsx` (Root Layout)**: The main layout for the entire application. It sets up the HTML structure, fonts, and the `ThemeProvider` for light/dark mode.
-- **`src/app/admin/layout.tsx` (Admin Layout)**: This is a crucial layout that wraps all pages within the `/admin` route. It provides the `TRPCProvider`, making tRPC hooks available to all admin components. It also manages the dynamic animated background (`Silk`) and the theme switcher.
+- **`src/app/(auth)/layout.tsx` (Auth Layout)**: This layout wraps the authentication pages and provides the `PublicTRPCProvider`, enabling tRPC queries on public routes like the login page.
+- **`src/app/admin/layout.tsx` (Admin Layout)**: This layout wraps all pages within the `/admin` route. It provides the authenticated `TRPCProvider`, making protected tRPC hooks available to all admin components.
 
-## Client & Server Components
+## "Server Component Shell" Pattern
 
-The application heavily utilizes Client Components (`"use client";`) for pages that require interactivity, state, and hooks. This is the case for all pages in the admin dashboard, which are rich with user interactions.
+For complex interactive pages, the project uses a pattern where a Server Component acts as a "shell" for a main Client Component. This is a best practice that leverages the strengths of both component types.
 
-Often, a `page.tsx` file (which can be a Server Component) will be a thin wrapper that imports and renders a main Client Component (e.g., `client-page.tsx`), which contains all the interactive logic. This is a best practice for separating concerns.
+- **`page.tsx` (Server Component Shell)**: This file is a Server Component. Its primary role is to handle server-centric concerns, such as wrapping the main component in a React `<Suspense>` boundary to enable UI streaming and provide an instant loading state.
+- **`client-page.tsx` (Client Component Core)**: This file contains the `"use client";` directive and houses all the interactive logic for the page. It manages state, handles user events, and fetches data using tRPC hooks.
+
+This pattern is notably used in the global results page (`src/app/admin/results/global/`). Other pages, such as the public poll page, are implemented as single, self-contained Client Components.

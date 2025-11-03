@@ -15,10 +15,14 @@ Le répertoire `src/app` suit les conventions du App Router, où les dossiers d�
 Les layouts sont utilisés pour créer une interface utilisateur cohérente sur plusieurs pages.
 
 - **`src/app/layout.tsx` (Root Layout)** : La mise en page principale pour toute l'application. Elle configure la structure HTML, les polices de caractères et le `ThemeProvider` pour le mode clair/sombre.
-- **`src/app/admin/layout.tsx` (Admin Layout)** : C'est une mise en page cruciale qui enveloppe toutes les pages de la route `/admin`. Elle fournit le `TRPCProvider`, rendant les hooks tRPC disponibles pour tous les composants de l'administration. Elle gère également l'arrière-plan animé (`Silk`) et le sélecteur de thème.
+- **`src/app/(auth)/layout.tsx` (Auth Layout)** : Cette mise en page enveloppe les pages d'authentification et fournit le `PublicTRPCProvider`, activant les requêtes tRPC sur les routes publiques comme la page de connexion.
+- **`src/app/admin/layout.tsx` (Admin Layout)** : Cette mise en page enveloppe toutes les pages de la route `/admin`. Elle fournit le `TRPCProvider` authentifié, rendant les hooks tRPC protégés disponibles pour tous les composants de l'administration.
 
-## Composants Client & Serveur
+## Pattern "Coquille Serveur" (Server Component Shell)
 
-L'application utilise massivement les Composants Clients (`"use client";`) pour les pages nécessitant de l'interactivité, un état et des hooks. C'est le cas de toutes les pages du tableau de bord, qui sont riches en interactions utilisateur.
+Pour les pages interactives complexes, le projet utilise un pattern où un Composant Serveur agit comme une "coquille" pour un Composant Client principal. C'est une bonne pratique qui tire parti des forces des deux types de composants.
 
-Souvent, un fichier `page.tsx` (qui peut être un Composant Serveur) agit comme une fine couche qui importe et affiche un Composant Client principal (ex: `client-page.tsx`), lequel contient toute la logique interactive. C'est une bonne pratique pour la séparation des responsabilités.
+- **`page.tsx` (Coquille Serveur)** : Ce fichier est un Composant Serveur. Son rôle principal est de gérer les aspects côté serveur, comme envelopper le composant principal dans une balise `<Suspense>` de React pour permettre le streaming de l'UI et fournir un état de chargement instantané.
+- **`client-page.tsx` (Noyau Client)** : Ce fichier contient la directive `"use client";` et abrite toute la logique interactive de la page. Il gère l'état, les événements utilisateur et récupère les données à l'aide des hooks tRPC.
+
+Ce pattern est notamment utilisé dans la page des résultats globaux (`src/app/admin/results/global/`). D'autres pages, comme la page de sondage publique, sont implémentées en tant que Composants Clients uniques et autonomes.
