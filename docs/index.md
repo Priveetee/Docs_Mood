@@ -10,11 +10,11 @@ hero:
     alt: Mood Logo
   actions:
     - theme: brand
-      text: Get Started
+      text: User Guide
       link: /user-guide/introduction
     - theme: alt
-      text: View on GitHub
-      link: https://github.com/Priveetee/Docs_Mood
+      text: Developer Guide
+      link: /developer-guide/introduction
 
 features:
   - title: "For Users"
