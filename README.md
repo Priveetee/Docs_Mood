@@ -1,6 +1,6 @@
-# PipePipe Wiki
+# Mood Documentation
 
-The unofficial, user-driven guide for the PipePipe application. This project aims to provide comprehensive documentation for both new and experienced users.
+Official documentation for the Mood project, providing comprehensive guides for developers and users.
 
 This website is built with [VitePress](https://vitepress.dev/).
 
@@ -8,8 +8,8 @@ This website is built with [VitePress](https://vitepress.dev/).
 
 1.  Clone the repository:
     ```sh
-    git clone https://github.com/Priveetee/Docs-PipePipe.git
-    cd Docs-PipePipe
+    git clone https://github.com/Priveetee/Docs_Mood.git
+    cd Docs_Mood
     ```
 2.  Install dependencies:
     ```sh
