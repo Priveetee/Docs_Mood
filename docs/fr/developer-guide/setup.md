@@ -1,74 +1,59 @@
 # Installation du Projet
 
-Ce guide vous expliquera les étapes pour lancer le projet Mood sur votre machine locale à des fins de **développement**. Pour les instructions de déploiement, veuillez consulter le fichier [README.md](https://github.com/Priveetee/Mood/blob/main/README.md) principal.
+Ce guide couvre deux scénarios principaux : le développement local rapide et le workflow de contribution requis pour soumettre des modifications.
 
-## Prérequis
+## Développement Local Rapide
 
-Avant de commencer, assurez-vous d'avoir les outils suivants installés sur votre système :
+Cette méthode est idéale pour le développement rapide de fonctionnalités ou le débogage. Elle exécute le serveur de développement Next.js sur votre machine hôte et se connecte à une base de données PostgreSQL dans Docker.
 
-- [Git](https://git-scm.com/)
-- [Bun](https://bun.sh/)
-- [Docker](https://www.docker.com/) et [Docker Compose](https://docs.docker.com/compose/)
+### Prérequis
 
-## 1. Cloner le Dépôt
+- [Git](https://git-scm.com/), [Bun](https://bun.sh/), [Docker](https://www.docker.com/)
 
-Tout d'abord, clonez le dépôt du projet sur votre machine locale.
+### Étapes
 
-```bash
-git clone https://github.com/Priveetee/Mood.git
-cd Mood
-```
+1.  **Cloner & Installer**:
+    ```bash
+    git clone https://github.com/Priveetee/Mood.git
+    cd Mood
+    bun install
+    ```
+2.  **Configurer l'Environnement**:
+    ```bash
+    cp .env.example .env
+    ```
+    Assurez-vous que `NEXT_PUBLIC_APP_URL` est défini sur `http://localhost:3000` et générez un `JWT_SECRET`.
+3.  **Démarrer la Base de Données**:
+    ```bash
+    docker-compose up -d postgres
+    ```
+4.  **Appliquer les Migrations**:
+    ```bash
+    bunx prisma migrate dev
+    ```
+5.  **Lancer le Serveur de Développement**:
+    `bash
+    bun run dev
+    `
+    L'application sera accessible à l'adresse [http://localhost:3000](http://localhost:3000).
 
-## 2. Installer les Dépendances
+---
 
-Installez toutes les dépendances requises du projet en utilisant Bun.
+## Workflow de Contribution & Pré-PR (Recommandé)
 
-```bash
-bun install
-```
+C'est le workflow **obligatoire** pour soumettre une Pull Request. Il garantit que vos modifications fonctionnent correctement dans un environnement propre, conteneurisé et similaire à la production. Ce processus compile l'application, exécute le linting et détecte les erreurs que votre serveur de développement local pourrait manquer.
 
-## 3. Configurer les Variables d'Environnement
+### Prérequis
 
-Le projet utilise un fichier `.env` pour sa configuration. Créez votre fichier d'environnement de développement local en copiant l'exemple :
+- [Git](https://git-scm.com/), [Docker](https://www.docker.com/)
 
-```bash
-cp .env.example .env
-```
+### Étapes
 
-Ouvrez ensuite le fichier `.env`. Les valeurs par défaut pour `POSTGRES_USER`, `POSTGRES_PASSWORD`, etc., sont généralement adaptées au développement local. Cependant, vous **devez** définir les variables suivantes :
+1.  **Cloner & Configurer**: Suivez les étapes 1 et 2 de l'installation rapide.
+2.  **Compiler et Lancer la Stack Complète**:
+    ```bash
+    docker compose up --build -d
+    ```
+    Cette unique commande construit l'image de l'application, démarre à la fois le serveur web et la base de données, et applique automatiquement les migrations via le script `entrypoint.sh`.
 
-- **`JWT_SECRET`** : Générez une chaîne secrète longue et aléatoire pour la sécurité des sessions.
-  ```bash
-  openssl rand -base64 32
-  ```
-- **`NEXT_PUBLIC_APP_URL`** : Définissez cette variable à `http://localhost:3000` pour le développement local.
-
-## 4. Démarrer la Base de Données
-
-Le projet nécessite une base de données PostgreSQL. Le fichier `docker-compose.yml` fourni est configuré pour démarrer uniquement le service de base de données pour le développement local.
-
-```bash
-docker-compose up -d postgres
-```
-
-Cette commande démarre **uniquement le service `postgres`** en arrière-plan, laissant l'application être exécutée localement.
-
-## 5. Appliquer les Migrations de la Base de Données
-
-Une fois la base de données en cours d'exécution, appliquez le schéma Prisma pour créer les tables nécessaires.
-
-```bash
-bunx prisma migrate dev
-```
-
-Cela synchronisera le schéma de votre base de données avec les modèles définis dans `prisma/schema.prisma`.
-
-## 6. Lancer le Serveur de Développement
-
-Vous êtes maintenant prêt à démarrer le serveur de développement Next.js sur votre machine hôte.
-
-```bash
-bun run dev
-```
-
-L'application devrait maintenant être en cours d'exécution et accessible à l'adresse [http://localhost:3000](http://localhost:3000).
+Si les conteneurs démarrent avec succès, vos modifications sont prêtes à être poussées pour une Pull Request. Pour une explication détaillée de ce processus, consultez la page [Déploiement](./deployment.md).

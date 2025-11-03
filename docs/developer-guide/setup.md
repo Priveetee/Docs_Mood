@@ -1,74 +1,59 @@
 # Project Setup
 
-This guide will walk you through the steps to get the Mood project running on your local machine for **development purposes**. For deployment instructions, please refer to the main [README.md](https://github.com/Priveetee/Mood/blob/main/README.md).
+This guide covers two main scenarios: quick local development and the contribution workflow required for submitting changes.
 
-## Prerequisites
+## Quick Local Development
 
-Before you begin, ensure you have the following tools installed on your system:
+This method is ideal for quick features development or debugging. It runs the Next.js dev server on your host machine and connects to a PostgreSQL database running in Docker.
 
-- [Git](https://git-scm.com/)
-- [Bun](https://bun.sh/)
-- [Docker](https://www.docker.com/) and [Docker Compose](https://docs.docker.com/compose/)
+### Prerequisites
 
-## 1. Clone the Repository
+- [Git](https://git-scm.com/), [Bun](https://bun.sh/), [Docker](https://www.docker.com/)
 
-First, clone the project repository to your local machine.
+### Steps
 
-```bash
-git clone https://github.com/Priveetee/Mood.git
-cd Mood
-```
+1.  **Clone & Install**:
+    ```bash
+    git clone https://github.com/Priveetee/Mood.git
+    cd Mood
+    bun install
+    ```
+2.  **Configure Environment**:
+    ```bash
+    cp .env.example .env
+    ```
+    Ensure `NEXT_PUBLIC_APP_URL` is set to `http://localhost:3000` and generate a `JWT_SECRET`.
+3.  **Start Database**:
+    ```bash
+    docker-compose up -d postgres
+    ```
+4.  **Apply Migrations**:
+    ```bash
+    bunx prisma migrate dev
+    ```
+5.  **Run Dev Server**:
+    `bash
+    bun run dev
+    `
+    The application will be accessible at [http://localhost:3000](http://localhost:3000).
 
-## 2. Install Dependencies
+---
 
-Install all the required project dependencies using Bun.
+## Contribution & Pre-PR Workflow (Recommended)
 
-```bash
-bun install
-```
+This is the **required** workflow for submitting a Pull Request. It ensures your changes work correctly in a clean, containerized production-like environment. This process builds the application, runs linting, and catches errors that your local dev server might miss.
 
-## 3. Configure Environment Variables
+### Prerequisites
 
-The project uses a `.env` file for configuration. Create your local development environment file by copying the example:
+- [Git](https://git-scm.com/), [Docker](https://www.docker.com/)
 
-```bash
-cp .env.example .env
-```
+### Steps
 
-Now, open the `.env` file. The default values for `POSTGRES_USER`, `POSTGRES_PASSWORD`, etc., are generally suitable for local development. However, you **must** set the following:
+1.  **Clone & Configure**: Follow steps 1 and 2 from the quick setup.
+2.  **Build and Run the Full Stack**:
+    ```bash
+    docker compose up --build -d
+    ```
+    This single command builds the application image, starts both the web server and the database, and automatically applies migrations via the `entrypoint.sh` script.
 
-- **`JWT_SECRET`**: Generate a long, random secret string for session security.
-  ```bash
-  openssl rand -base64 32
-  ```
-- **`NEXT_PUBLIC_APP_URL`**: Set this to `http://localhost:3000` for local development.
-
-## 4. Start the Database
-
-The project requires a PostgreSQL database. The provided `docker-compose.yml` is configured to start only the database service for local development.
-
-```bash
-docker-compose up -d postgres
-```
-
-This command starts **only the `postgres` service** in the background, leaving the application to be run locally.
-
-## 5. Apply Database Migrations
-
-With the database running, apply the Prisma schema to create the necessary tables.
-
-```bash
-bunx prisma migrate dev
-```
-
-This will synchronize your database schema with the models defined in `prisma/schema.prisma`.
-
-## 6. Run the Development Server
-
-You are now ready to start the Next.js development server on your host machine.
-
-```bash
-bun run dev
-```
-
-The application should now be running and accessible at [http://localhost:3000](http://localhost:3000).
+If the containers start successfully, your changes are ready to be pushed for a Pull Request. For a detailed explanation of this process, see the [Deployment](./deployment.md) page.

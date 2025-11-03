@@ -55,6 +55,7 @@ export const fr = defineConfig({
               text: "Authentification",
               link: "/fr/developer-guide/authentication",
             },
+            { text: "Déploiement", link: "/fr/developer-guide/deployment" },
           ],
         },
       ],
