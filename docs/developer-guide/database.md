@@ -1,15 +1,27 @@
 # Database & Prisma Schema
 
-The Mood project's data persistence is handled by a PostgreSQL database, with all interactions managed through the [Prisma](https://www.prisma.io/) ORM. The `prisma/schema.prisma` file is the single source of truth for the data structure.
+The `prisma/schema.prisma` file is the single source of truth for the application's data structure. This page provides a detailed breakdown of each model, its fields, and its relationships.
 
 ## Authentication Models
 
-These models are primarily managed by the `better-auth` library and handle user and session management.
+These models are primarily managed by the `better-auth` library to handle user identity and sessions.
 
-- **User**: Represents an application user, typically an administrator who creates and manages campaigns.
-- **Account**: Used for OAuth provider connections (e.g., Google, GitHub).
-- **Session**: Stores active user session information.
-- **VerificationToken** / **Verification**: Used for verification processes like email confirmation.
+### `User`
+
+Represents an administrator account. The application is designed for a single administrator.
+
+| Field       | Type     | Description                                                              |
+| :---------- | :------- | :----------------------------------------------------------------------- |
+| `id`        | `String` | Unique identifier (CUID). Primary key.                                   |
+| `email`     | `String` | The user's unique email address, used for login.                         |
+| `password`  | `String` | The hashed password for the user.                                        |
+| `campaigns` | `Campaign[]` | A one-to-many relationship linking the user to all campaigns they have created. |
+
+### Other Auth Models (`Account`, `Session`, etc.)
+
+These models are standard `better-auth` requirements for session management, OAuth connections, and verification tokens. Their structure is not critical to the application's core business logic.
+
+---
 
 ## Core Business Models
 
@@ -17,35 +29,45 @@ This is the functional heart of the Mood application.
 
 ### `Campaign`
 
-A `Campaign` is the main container for a set of polls.
+The top-level container for a polling event.
 
-- **Purpose**: To group votes for a specific event or period (e.g., "Sprint 22 Feedback," "Q4 Satisfaction").
-- **Key Fields**:
-  - `name`: The campaign's display name.
-  - `createdBy` / `creator`: A direct relationship to the `User` who created the campaign.
-  - `expiresAt`: An optional date when the campaign ends and no longer accepts votes.
-  - `archived`: A boolean to hide old campaigns from the main interface.
+| Field       | Type         | Description                                                              |
+| :---------- | :----------- | :----------------------------------------------------------------------- |
+| `id`        | `Int`        | Auto-incrementing integer. Primary key.                                  |
+| `name`      | `String`     | The descriptive name of the campaign (e.g., "Q4 Feedback").              |
+| `createdBy` | `String`     | Foreign key linking to a `User.id`.                                      |
+| `creator`   | `User`       | The relation to the `User` model. `onDelete: Cascade` ensures that if a user is deleted, all their campaigns are also deleted. |
+| `archived`  | `Boolean`    | A flag for soft-deleting campaigns. Defaults to `false`.                 |
+| `expiresAt` | `DateTime?`  | An optional date for the campaign to auto-archive.                       |
+| `pollLinks` | `PollLink[]` | A one-to-many relationship to all poll links generated for this campaign.    |
+| `votes`     | `Vote[]`     | A direct one-to-many relationship with all votes, used for fast global aggregations. |
 
 ### `PollLink`
 
-The `PollLink` is the unique link distributed to individuals whose feedback is being collected.
+The unique, distributable link for a specific team or manager within a campaign.
 
-- **Purpose**: To allow response segmentation within a single campaign. A campaign can have multiple `PollLink`s.
-- **Key Fields**:
-  - `token`: A unique and secret identifier used in the URL.
-  - `managerName`: Associates a link with a specific person, team, or department.
-  - `campaignId`: The parent campaign.
+| Field         | Type       | Description                                                              |
+| :------------ | :--------- | :----------------------------------------------------------------------- |
+| `id`          | `String`   | Unique identifier (UUID). Primary key. UUIDs are excellent for non-guessable public identifiers. |
+| `campaignId`  | `Int`      | Foreign key linking to a `Campaign.id`.                                  |
+| `campaign`    | `Campaign` | The relation to the parent `Campaign`. `onDelete: Cascade` ensures that if a campaign is deleted, all its links are also deleted. |
+| `token`       | `String`   | A unique, short, random string (`nanoid(10)`) used as the public part of the poll URL. |
+| `managerName` | `String`   | The name of the manager or team associated with this link, used for segmenting results. |
+| `votes`       | `Vote[]`   | A one-to-many relationship to all votes submitted through this specific link. |
 
 ### `Vote`
 
-A `Vote` is the atomic unit of data, representing the feedback submitted by an end-user.
+The atomic unit of feedback, representing a single anonymous submission.
 
-- **Purpose**: To record a person's sentiment and comments at a specific moment.
-- **Key Fields**:
-  - `mood`: The sentiment value (e.g., "happy", "neutral", "sad").
-  - `comment`: An optional text field for qualitative feedback.
-  - `pollLinkId`: The ID of the link through which the vote was submitted. This is crucial for **tracking results per manager or team**.
-  - `campaignId`: The ID of the parent campaign. This relationship is intentionally included (denormalized) to **optimize the performance of global aggregation queries** on a campaign.
+| Field        | Type         | Description                                                              |
+| :----------- | :----------- | :----------------------------------------------------------------------- |
+| `id`         | `Int`        | Auto-incrementing integer. Primary key.                                  |
+| `pollLinkId` | `String`     | Foreign key linking to a `PollLink.id`. This is crucial for tracking results per manager. |
+| `pollLink`   | `PollLink`   | The relation to the `PollLink` used. `onDelete: Cascade` ensures data integrity. |
+| `campaignId` | `Int`        | **Denormalized** foreign key to `Campaign.id`. This is a deliberate performance optimization for global aggregation queries, avoiding an extra join through `PollLink`. |
+| `campaign`   | `Campaign`   | The direct relation to the `Campaign`.                                   |
+| `mood`       | `String`     | The core sentiment value (e.g., "green", "red").                         |
+| `comment`    | `String?`    | Optional qualitative feedback provided by the user.                      |
 
 ## Logical Relationship Schema
 

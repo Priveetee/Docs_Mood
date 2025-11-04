@@ -1,15 +1,27 @@
 # Base de Données & Schéma Prisma
 
-La persistance des données du projet Mood est gérée par une base de données PostgreSQL, et les interactions sont effectuées via l'ORM [Prisma](https://www.prisma.io/). Le fichier `prisma/schema.prisma` est l'unique source de vérité concernant la structure des données.
+Le fichier `prisma/schema.prisma` est l'unique source de vérité pour la structure des données de l'application. Cette page fournit une analyse détaillée de chaque modèle, de ses champs et de ses relations.
 
 ## Modèles d'Authentification
 
-Ces modèles sont principalement gérés par la librairie `better-auth` et assurent la gestion des utilisateurs et de leurs sessions.
+Ces modèles sont principalement gérés par la librairie `better-auth` pour gérer l'identité et les sessions des utilisateurs.
 
-- **User** : Représente un utilisateur de l'application (généralement un administrateur). C'est lui qui crée et gère les campagnes.
-- **Account** : Utilisé pour les connexions via des fournisseurs OAuth (ex: Google, GitHub).
-- **Session** : Stocke les informations des sessions actives des utilisateurs.
-- **VerificationToken** / **Verification** : Utilisés pour les processus de vérification (ex: confirmation d'email).
+### `User`
+
+Représente un compte administrateur. L'application est conçue pour un administrateur unique.
+
+| Champ       | Type       | Description                                                              |
+| :---------- | :--------- | :----------------------------------------------------------------------- |
+| `id`        | `String`   | Identifiant unique (CUID). Clé primaire.                                 |
+| `email`     | `String`   | L'adresse e-mail unique de l'utilisateur, utilisée pour la connexion.    |
+| `password`  | `String`   | Le mot de passe haché de l'utilisateur.                                  |
+| `campaigns` | `Campaign[]` | Une relation un-à-plusieurs liant l'utilisateur à toutes les campagnes qu'il a créées. |
+
+### Autres Modèles d'Auth (`Account`, `Session`, etc.)
+
+Ces modèles sont des prérequis standards de `better-auth` pour la gestion des sessions, les connexions OAuth et les jetons de vérification. Leur structure n'est pas critique pour la logique métier de l'application.
+
+---
 
 ## Modèles Métier
 
@@ -17,35 +29,45 @@ C'est le cœur fonctionnel de l'application Mood.
 
 ### `Campaign`
 
-La `Campaign` est le conteneur principal pour un ensemble de sondages.
+Le conteneur de plus haut niveau pour un événement de sondage.
 
-- **Objectif** : Regrouper les votes pour un événement ou une période donnée (ex: "Feedback Sprint 22", "Satisfaction Q4").
-- **Champs clés** :
-  - `name` : Le nom de la campagne.
-  - `createdBy` / `creator` : Une relation directe avec le `User` qui a créé la campagne.
-  - `expiresAt` : Une date optionnelle à laquelle la campagne se termine et n'accepte plus de votes.
-  - `archived` : Un booléen pour masquer les vieilles campagnes de l'interface principale.
+| Champ       | Type         | Description                                                              |
+| :---------- | :----------- | :----------------------------------------------------------------------- |
+| `id`        | `Int`        | Entier auto-incrémenté. Clé primaire.                                    |
+| `name`      | `String`     | Le nom descriptif de la campagne (ex: "Feedback Q4").                    |
+| `createdBy` | `String`     | Clé étrangère liée à un `User.id`.                                       |
+| `creator`   | `User`       | La relation vers le modèle `User`. `onDelete: Cascade` assure que si un utilisateur est supprimé, toutes ses campagnes le sont aussi. |
+| `archived`  | `Boolean`    | Un drapeau pour l'archivage (soft-delete) des campagnes. Vaut `false` par défaut. |
+| `expiresAt` | `DateTime?`  | Une date optionnelle pour l'auto-archivage de la campagne.               |
+| `pollLinks` | `PollLink[]` | Une relation un-à-plusieurs vers tous les liens de sondage générés pour cette campagne. |
+| `votes`     | `Vote[]`     | Une relation directe un-à-plusieurs avec tous les votes, utilisée pour des agrégations globales rapides. |
 
 ### `PollLink`
 
-Le `PollLink` est le lien unique qui est distribué aux personnes dont on veut recueillir l'avis.
+Le lien unique et distribuable pour une équipe ou un manager spécifique au sein d'une campagne.
 
-- **Objectif** : Permettre de segmenter les réponses au sein d'une même campagne. Une campagne peut avoir de multiples `PollLink`.
-- **Champs clés** :
-  - `token` : Un identifiant unique et secret pour l'URL.
-  - `managerName` : Permet d'associer un lien à une personne, une équipe ou un département spécifique.
-  - `campaignId` : La campagne parente.
+| Champ         | Type       | Description                                                              |
+| :------------ | :--------- | :----------------------------------------------------------------------- |
+| `id`          | `String`   | Identifiant unique (UUID). Clé primaire. Les UUIDs sont excellents pour les identifiants publics non devinables. |
+| `campaignId`  | `Int`      | Clé étrangère liée à un `Campaign.id`.                                   |
+| `campaign`    | `Campaign` | La relation vers la `Campaign` parente. `onDelete: Cascade` assure que si une campagne est supprimée, tous ses liens le sont aussi. |
+| `token`       | `String`   | Une chaîne courte, unique et aléatoire (`nanoid(10)`) utilisée comme partie publique de l'URL du sondage. |
+| `managerName` | `String`   | Le nom du manager ou de l'équipe associé à ce lien, utilisé pour segmenter les résultats. |
+| `votes`       | `Vote[]`   | Une relation un-à-plusieurs vers tous les votes soumis via ce lien spécifique. |
 
 ### `Vote`
 
-Le `Vote` est l'unité de donnée atomique, représentant le feedback soumis par un utilisateur final.
+L'unité atomique de feedback, représentant une unique soumission anonyme.
 
-- **Objectif** : Enregistrer le ressenti et le commentaire d'une personne à un instant T.
-- **Champs clés** :
-  - `mood` : La valeur du sentiment (ex: "happy", "neutral", "sad").
-  - `comment` : Un champ texte optionnel pour un feedback qualitatif.
-  - `pollLinkId` : L'identifiant du lien via lequel le vote a été soumis. C'est crucial pour **suivre les résultats par manager ou par équipe**.
-  - `campaignId` : L'identifiant de la campagne parente. Cette relation est intentionnellement incluse (dénormalisée) pour **optimiser les performances des requêtes d'agrégation globales** sur une campagne.
+| Champ        | Type         | Description                                                              |
+| :----------- | :----------- | :----------------------------------------------------------------------- |
+| `id`         | `Int`        | Entier auto-incrémenté. Clé primaire.                                    |
+| `pollLinkId` | `String`     | Clé étrangère liée à un `PollLink.id`. Crucial pour le suivi des résultats par manager. |
+| `pollLink`   | `PollLink`   | La relation vers le `PollLink` utilisé. `onDelete: Cascade` assure l'intégrité des données. |
+| `campaignId` | `Int`        | Clé étrangère **dénormalisée** vers `Campaign.id`. C'est une optimisation de performance délibérée pour les requêtes d'agrégation globales, évitant une jointure supplémentaire via `PollLink`. |
+| `campaign`   | `Campaign`   | La relation directe vers la `Campaign`.                                  |
+| `mood`       | `String`     | La valeur du sentiment (ex: "green", "red").                             |
+| `comment`    | `String?`    | Le feedback qualitatif optionnel fourni par l'utilisateur.               |
 
 ## Schéma Logique des Relations
 
