@@ -25,5 +25,5 @@ features:
     link: "/developer-guide/introduction"
   - title: "For Contributors"
     details: "Want to help improve Mood? Find out how you can contribute to the project."
-    link: "/CONTRIBUTING"
+    link: "https://github.com/Priveetee/Docs_Mood/blob/main/CONTRIBUTING.md"
 ---
